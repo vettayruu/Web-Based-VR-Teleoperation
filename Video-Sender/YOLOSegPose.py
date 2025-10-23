@@ -134,9 +134,10 @@ class YOLOSegPose:
         for item in output:
             if item['class'] in ('tip', 'tip_1', 'tip_2', 'gripper'):
                 cx = item.get('cx', 0)
-                if lx1 < lx2 and lx1 <= cx <= lx2:
+                cy = item.get('cy', 0)
+                if lx1 < lx2 and lx1 <= cx <= lx2 and ly1 <= cy <= ly2:
                     item['group'] = 'left'
-                elif rx1 < rx2 and rx1 <= cx <= rx2:
+                elif rx1 < rx2 and rx1 <= cx <= rx2 and ry1 <= cy <= ry2:
                     item['group'] = 'right'
                 # else:
                 #     item['group'] = item.get('group', '')
@@ -178,9 +179,13 @@ class YOLOSegPose:
         length = np.hypot(dx, dy)
 
         # 法向量单位化
-        nx = -dy / length
-        ny = dx / length
-        theta = np.arctan2(ny, nx)
+        nx = ny = theta = None
+        if length == 0:
+            nx = ny = theta = 0
+        else:
+            nx = -dy / length
+            ny = dx / length
+            theta = np.arctan2(ny, nx)
 
         width = 150
 
