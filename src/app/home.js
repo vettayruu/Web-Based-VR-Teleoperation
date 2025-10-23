@@ -37,6 +37,7 @@ const MQTT_DEVICE_TOPIC = "dev/" + idtopic;
 const MQTT_CTRL_TOPIC = "control/"; 
 const MQTT_ROBOT_STATE_TOPIC = "robot/";
 const MQTT_TIME_TOPIC = "time/";
+const MQTT_SHARE_TOPIC = "share/";
 
 // IK State Codes
 const STATE_CODES = {
@@ -288,7 +289,7 @@ function vrquatToR(vr_controller_quat, VR_Control_Mode, hand, mode) {
 
 
 export default function DynamicHome(props) {
-  const [now, setNow] = React.useState(new Date())
+  const [now, setNow] = React.useState(Date.now());
   const [rendered, set_rendered] = React.useState(false)
 
   const robotNameList = ["Model"]
@@ -368,6 +369,7 @@ export default function DynamicHome(props) {
   const [left_arm_mode, setLeftArmMode] = React.useState('free'); // 'free' or 'assist'
   const [VR_Control_Mode, setControlMode] = React.useState('inSpace');
   const [indicator, setIndicator] = React.useState(false);
+  const [shareControl, setShareControl] = React.useState(false);
 
  // MQTT
   const [selectedMode, setSelectedMode] = React.useState('control'); 
@@ -445,7 +447,7 @@ export default function DynamicHome(props) {
   // Right Arm 
   const [robot_state, setRobotState] = React.useState(null);
   const [theta_body, setThetaBody] = React.useState([0, 0, 0, 0, 0, 0]);
-  const [theta_tool, setThetaTool] = React.useState(0);
+  const [theta_tool, setThetaTool] = React.useState(89);
   const [rightArmPosition, setRightArmPosition] = React.useState([0.3, 0.0, 0]);
   const [spinor_omegahat_right, setSpinorOmegaHatRight] = React.useState([0, 0, 0, 0, 0, 0]);
   const [spinor_theta_right, setSpinorThetaRight] = React.useState(0);
@@ -453,7 +455,7 @@ export default function DynamicHome(props) {
   // Left Arm
   const [robot_state_left, setRobotStateLeft] = React.useState(null);
   const [theta_body_left, setThetaBodyLeft] = React.useState([0, 0, 0, 0, 0, 0]);
-  const [theta_tool_left, setThetaToolLeft] = React.useState(0);
+  const [theta_tool_left, setThetaToolLeft] = React.useState(89);
   const [leftArmPosition, setLeftArmPosition] = React.useState([-0.3, 0.0, 0]);
   const [spinor_omegahat_left, setSpinorOmegaHatLeft] = React.useState([0, 0, 0, 0, 0, 0]);
   const [spinor_theta_left, setSpinorThetaLeft] = React.useState(0);
@@ -502,7 +504,7 @@ export default function DynamicHome(props) {
       setEuler(mr.RotMatToEuler(R_right, Euler_order)); 
       setREE(R_right);
     }
-  }, [theta_body, robotParams]);
+  }, [robotParams, theta_body]);
 
   /* ---------------------- Left Arm Initialize ------------------------------------*/
   const [position_ee_left, setPositionEELeft] = React.useState([0,0,0]);
@@ -658,11 +660,16 @@ export default function DynamicHome(props) {
         [0, 0, 1]]
       );
     }
-  }, [trigger_on, rendered, vrModeRef.current]);
+  }, [
+      trigger_on, 
+      rendered, 
+      vrModeRef.current,
+      lastVRPosRef.current
+    ]);
 
   /* ---------------------- Right Arm VR Control ------------------------------------*/
   React.useEffect(() => {
-    if (rendered && vrModeRef.current && trigger_on && !showMenu) {
+    if (rendered && vrModeRef.current && trigger_on && !showMenu && !shareControl) {
       const currentP = [...position_ee];
       const currentR = [...R_ee];
 
@@ -717,8 +724,6 @@ export default function DynamicHome(props) {
     vr_controller_p_diff,
     vr_controller_R_relative,
     rendered, 
-    trigger_on,
-    showMenu,
     vrModeRef.current,
     lastVRPosRef.current,
     lastRotationMatrixRef.current,
@@ -936,7 +941,7 @@ export default function DynamicHome(props) {
 
 
   React.useEffect(() => {
-    if (rendered && vrModeRef.current && !showMenu) {
+    if (rendered && vrModeRef.current && !showMenu && !shareControl) {
       let vr_p, vr_R;
       if (left_arm_mode === 'free') {
         vr_p = vr_controller_p_diff_left;
@@ -986,10 +991,6 @@ export default function DynamicHome(props) {
         setThetaBodyLeft(new_theta_body);
         setErrorCodeLeft(error_code);
       } else if (left_arm_mode === 'assist') {
-        // const { new_theta_body, error_code } = IK_joint_velocity_limit(newT, robotParams.left, theta_body_left, VR_Control_Mode);
-        // setThetaBodyLeft(new_theta_body);
-        // setErrorCodeLeft(error_code);
-        
         const { joint_ometahat, joint_theta, error_code } = IK_joint_velocity_assist(newT, robotParams.left, theta_body_left, VR_Control_Mode);
         setSpinorOmegaHatLeft(joint_ometahat);
         setSpinorThetaLeft(joint_theta);
@@ -1002,8 +1003,6 @@ export default function DynamicHome(props) {
     vr_controller_p_diff,
     vr_controller_R_relative,
     rendered, 
-    showMenu,
-    trigger_on_left,
     vrModeRef.current
   ]);
 
@@ -1012,12 +1011,12 @@ export default function DynamicHome(props) {
     let intervalId = null;
     if (button_y_on) {
       intervalId = setInterval(() => {
-        setThetaToolLeft(prev => clampTool(prev + 0.5));
+        setThetaToolLeft(prev => clampTool(prev + 1.0));
       }, dt); 
     }
     else if (button_x_on) {
       intervalId = setInterval(() => {
-        setThetaToolLeft(prev => clampTool(prev - 0.5));
+        setThetaToolLeft(prev => clampTool(prev - 1.0));
       }, dt); 
     }
     return () => {
@@ -1033,9 +1032,17 @@ export default function DynamicHome(props) {
     }
   }, [thumbstick_down_left]);
 
+  React.useEffect(() => {
+    if (thumbstick_down_right) {
+      setShareControl(prev => !prev);
+      setThumbstickDownRight(false);
+      console.log("Shared Control On:", !shareControl);
+    }
+  }, [thumbstick_down_right]);
+
   /*========================= Dual Arm Control ================================*/
   React.useEffect(() => {
-    if (left_arm_mode === 'assist' && trigger_on && !showMenu) {
+    if (left_arm_mode === 'assist' && trigger_on && !showMenu && !shareControl) {
 
       let dual_arm_state
       if (error_code === STATE_CODES.JOINT_LIMIT || error_code_left === STATE_CODES.JOINT_LIMIT) {
@@ -1183,7 +1190,7 @@ export default function DynamicHome(props) {
       setErrorCodeCam(error_code);
     }
 
-  }, [rendered, vrModeRef.current, showMenu, thumbstick_left, thumbstick_right, grip_on, grip_on_left]);
+  }, [rendered, vrModeRef.current, thumbstick_left, thumbstick_right, grip_on, grip_on_left]);
 
 
   /* ========================= Web Controller Inputs =========================*/
@@ -1253,6 +1260,7 @@ export default function DynamicHome(props) {
       setLeftArmMode,
       setControlMode,
       setIndicator,
+      setShareControl,
     });
   }, []);
 
@@ -1265,6 +1273,7 @@ export default function DynamicHome(props) {
   const thetaToolMQTT = React.useRef(theta_tool);
   React.useEffect(() => {
     thetaToolMQTT.current = theta_tool;
+    console.log("Theta Tool MQTT Updated:", theta_tool);
   }, [theta_tool]);
 
   const thetaBodyLeftMQTT = React.useRef(theta_body_left);
@@ -1308,21 +1317,31 @@ export default function DynamicHome(props) {
       frame.session.requestAnimationFrame(onXRFrameMQTT);
       setNow(performance.now()); 
     }
-    if ((mqttclient != null) && receiveStateRef.current) {
+  }
+  
+  React.useEffect(() => {
       const ctl_json = JSON.stringify({
         timestamp: Date.now(),
-        runtime: time,
         joint: thetaBodyMQTT.current,
         tool: thetaToolMQTT.current,
         joint_left: thetaBodyLeftMQTT.current,
         tool_left: thetaToolLeftMQTT.current,
         cam: thetaBodyCamMQTT.current
       });
-      publishMQTT(MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
-      // console.log("onXRFrameMQTT published:", MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
-    }
-  }
+      if ((mqttclient != null) && receiveStateRef.current && !shareControl && !showMenu) {
+        publishMQTT(MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
+        // console.log("onXRFrameMQTT published:", MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
+      }
+  }, [
+    thetaBodyMQTT.current, 
+    thetaToolMQTT.current, 
+    thetaBodyLeftMQTT.current, 
+    thetaToolLeftMQTT.current, 
+    thetaBodyCamMQTT.current
+  ]);
 
+
+  // Time Sync MQTT
   const [Timeoffset, setTimeOffset] = React.useState(0);
   React.useEffect(() => {
     if ((mqttclient != null) && receiveStateRef.current) {
@@ -1330,6 +1349,36 @@ export default function DynamicHome(props) {
       console.log("Time Sync Published:", Timeoffset);
     }
   }, [robot_state, Timeoffset]);
+
+
+  // Shared Control Control Signal MQTT
+  React.useEffect(() => {
+      let share_control_flag;
+      if (shareControl) {
+        share_control_flag = 1;
+      } else {
+        share_control_flag = 0;
+      }
+
+      let share_control_signal;
+      if (thumbstick_right[1] < -0.35) {
+        share_control_signal = 1;
+      } else if (thumbstick_right[1] > 0.5) {
+        share_control_signal = -1;
+      } else {
+        share_control_signal = 0;
+      }
+
+      if ((mqttclient != null) && receiveStateRef.current) {
+        publishMQTT(MQTT_SHARE_TOPIC + robotIDRef.current, JSON.stringify({
+          flag: share_control_flag,
+          share: share_control_signal,
+        }));
+        console.log("Shared Control Published:", share_control_signal);
+      }
+
+  }, [thumbstick_right, shareControl]);
+
 
   // Robot Request MQTT
   const requestRobot = (mqclient) => {
@@ -1346,7 +1395,7 @@ export default function DynamicHome(props) {
     if (robot_state === "initialize") {
       setThetaBody(theta_body_feedback)
     }
-  }, [robot_state]);
+  }, [robot_state, theta_body_feedback]);
 
   const [theta_body_left_feedback, setThetaBodyLeftFeedback] = React.useState([0, 0, 0, 0, 0, 0]);
   React.useEffect(() => {
