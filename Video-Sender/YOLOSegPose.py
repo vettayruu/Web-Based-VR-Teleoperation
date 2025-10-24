@@ -9,7 +9,7 @@ class YOLOSegPose:
         """
         self.model = YOLO(model_path, verbose=False)
 
-        self.length_object = 100
+        self.length_object = 80
 
         self.img_width = 1280
         self.img_height = 720
@@ -28,6 +28,8 @@ class YOLOSegPose:
         self.pack_cx = 0
         self.pack_cy = 0
         self.pack_theta = 0
+
+        self.sorted_items = []
 
     def infer(self, img):
         """
@@ -234,10 +236,6 @@ class YOLOSegPose:
                 a_tip_1 = b_tip_1 = a_tip_2 = b_tip_2 = None
 
                 for item in items:
-                    # if item['class'] == 'pack':
-                    #     cx, cy, theta = item['cx'], item['cy'], np.radians(item['theta'])
-                    #     self.draw_pose(img, cx, cy, theta+np.pi, item['class'], self.length_object, self.length_object)
-
                     if item['class'] == 'tip_1':
                         cx_tip_1, cy_tip_1 = item['cx'], item['cy']
                         theta_tip_1 = np.radians(item['theta'])
@@ -265,10 +263,6 @@ class YOLOSegPose:
                 a_tip_1 = b_tip_1 = a_tip_2 = b_tip_2 = None
 
                 for item in items:
-                    # if item['class'] == 'pack':
-                    #     cx, cy, theta = item['cx'], item['cy'], np.radians(item['theta'])
-                    #     self.draw_pose(img, cx, cy, theta, item['class'], self.length_tip_x, self.length_tip_y)
-
                     if item['class'] == 'tip_1':
                         cx_tip_1, cy_tip_1 = item['cx'], item['cy']
                         theta_tip_1 = np.radians(item['theta'])
@@ -291,14 +285,32 @@ class YOLOSegPose:
                     self.right_tip_theta = theta
 
             else:
+                p_right_arm = np.array([self.right_tip_cx, self.right_tip_cy])
+                p_pack = []
+
+                # Collect all item positions
                 for item in items:
                     cx, cy, theta = item['cx'], item['cy'], np.radians(item['theta'])
-                    self.draw_pose(img, cx, cy, theta, item['class'], self.length_object, self.length_object/2)
+                    self.draw_pose(img, cx, cy, theta, item['class'], self.length_object, self.length_object / 2)
+                    p_pack.append([cx, cy])
 
-                    # get_pack_pose
-                    self.pack_cx = cx
-                    self.pack_cy = cy
-                    self.pack_theta = theta
+                p_pack = np.array(p_pack)  # shape (N, 2)
+
+                # Compute distances from right arm tip to all items
+                D = np.linalg.norm(p_pack - p_right_arm, axis=1)  # shape (N,)
+
+                # Sort by distance
+                sorted_idx = np.argsort(D)
+
+                # Get sorted items
+                self.sorted_items = [items[i] for i in sorted_idx]
+                # print("sorted_items", self.sorted_items)
+
+                # Optional: print for debug
+                # for i, idx in enumerate(sorted_idx):
+                #     print(f"{i + 1}. class={items[idx]['class']}, distance={D[idx]:.3f}")
+
+
 
     def get_pack_pose(self):
         return self.pack_cx, self.pack_cy, self.pack_theta
@@ -308,6 +320,9 @@ class YOLOSegPose:
 
     def get_tip_pose_right(self):
         return self.right_tip_cx, self.right_tip_cy, self.right_tip_theta
+
+    def get_sorted_items(self):
+        return self.sorted_items
 
         # cv2.imshow("YOLO Seg Pose", img)
         # cv2.waitKey(0)

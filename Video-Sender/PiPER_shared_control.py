@@ -107,114 +107,134 @@ if __name__ == "__main__":
 
         shared_control_flag = client.get_shared_control_flag()
         if shared_control_flag == 1:
+            shared_control_signal = client.get_shared_control_signal()
+
             yolo_seg_left.visualize(left_image)
             yolo_seg_right.visualize(right_image)
 
             # object
-            pack_cx_l, pack_cy_l, pack_theta_l = yolo_seg_left.get_pack_pose()
-            pack_cx_r, pack_cy_r, pack_theta_r = yolo_seg_right.get_pack_pose()
+            pack_sorted_list_l = yolo_seg_left.get_sorted_items()
+            pack_sorted_list_r = yolo_seg_right.get_sorted_items()
 
-            # # left_arm
-            # left_arm_cx_l, left_arm_cy_l, left_arm_theta_l = yolo_seg_left.get_tip_pose_left()
-            # left_arm_cx_r, left_arm_cy_r, left_arm_theta_r = yolo_seg_right.get_tip_pose_left()
-            # print(f"left_arm_pose_l: {left_arm_cx_l}, {left_arm_cy_l}, {np.rad2deg(left_arm_theta_l)}")
-            # print(f"left_arm_pose_r: {left_arm_cx_r}, {left_arm_cy_r}, {np.rad2deg(left_arm_theta_r)}")
+            pack_num_l = len(pack_sorted_list_l)
+            pack_num_r = len(pack_sorted_list_r)
+            pack_num = int((pack_num_l + pack_num_r)/2)
 
-            # right_arm
-            right_arm_cx_l, right_arm_cy_l, right_arm_theta_l = yolo_seg_left.get_tip_pose_right()
-            right_arm_cx_r, right_arm_cy_r, right_arm_theta_r = yolo_seg_right.get_tip_pose_right()
+            if pack_num_l > 0 and pack_num_r > 0:
+                pack_item_l = pack_sorted_list_l[0]
+                pack_item_r = pack_sorted_list_r[0]
 
-            offset_left = right_arm_theta_l - pack_theta_l
-            offset_right = right_arm_theta_r - pack_theta_r
-            mean_offset_theta = (offset_left + offset_right)/2
+                pack_cx_l, pack_cy_l, pack_theta_l = pack_item_l['cx'], pack_item_l['cy'], np.deg2rad(pack_item_l['theta'])
+                pack_cx_r, pack_cy_r, pack_theta_r = pack_item_r['cx'], pack_item_r['cy'], np.deg2rad(pack_item_r['theta'])
 
-            offset_cx_l = (right_arm_cx_l - pack_cx_l)/1000
-            offset_cx_r = (right_arm_cx_r - pack_cx_r)/1000
-            mean_offset_cx = (offset_cx_l + offset_cx_r)/2
+                cv2.putText(left_image, "target", (int(pack_cx_l), int(pack_cy_l)-30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                cv2.putText(right_image, "target", (int(pack_cx_r), int(pack_cy_r)-30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-            offset_cy_r = (right_arm_cy_r - pack_cy_r)/1000
-            offset_cy_l = (right_arm_cy_l - pack_cy_l)/1000
-            mean_offset_cy = (offset_cy_l + offset_cy_r)/2
+                # # left_arm
+                # left_arm_cx_l, left_arm_cy_l, left_arm_theta_l = yolo_seg_left.get_tip_pose_left()
+                # left_arm_cx_r, left_arm_cy_r, left_arm_theta_r = yolo_seg_right.get_tip_pose_left()
+                # print(f"left_arm_pose_l: {left_arm_cx_l}, {left_arm_cy_l}, {np.rad2deg(left_arm_theta_l)}")
+                # print(f"left_arm_pose_r: {left_arm_cx_r}, {left_arm_cy_r}, {np.rad2deg(left_arm_theta_r)}")
 
-            loss = [mean_offset_cy, mean_offset_cx, mean_offset_theta]
-            loss_hat, loss_mag = mr.AxisAng3(loss)
+                # right_arm
+                right_arm_cx_l, right_arm_cy_l, right_arm_theta_l = yolo_seg_left.get_tip_pose_right()
+                right_arm_cx_r, right_arm_cy_r, right_arm_theta_r = yolo_seg_right.get_tip_pose_right()
 
-            d_loss_mag = (loss_mag - prev_loss_mag)/Tf
-            prev_loss_mag = loss_mag
+                offset_left = right_arm_theta_l - pack_theta_l
+                offset_right = right_arm_theta_r - pack_theta_r
+                mean_offset_theta = (offset_left + offset_right)/2
 
-            loss_theta = Kp_v * loss_mag + Kd_v * d_loss_mag
+                offset_cx_l = (right_arm_cx_l - pack_cx_l)/1000
+                offset_cx_r = (right_arm_cx_r - pack_cx_r)/1000
+                mean_offset_cx = (offset_cx_l + offset_cx_r)/2
 
-            # VR Control
-            shared_control_signal = client.get_shared_control_signal()
+                offset_cy_r = (right_arm_cy_r - pack_cy_r)/1000
+                offset_cy_l = (right_arm_cy_l - pack_cy_l)/1000
+                mean_offset_cy = (offset_cy_l + offset_cy_r)/2
 
-            if shared_control_signal == 1 and loss_mag > loss_threshold:
-                # Get current pose
-                theta_start = piper.get_joint_feedback_mr()
-                T = piperik.fk(theta_start, mode)
-                R, p = mr.TransToRp(T)
+                loss = [mean_offset_cy, mean_offset_cx, mean_offset_theta]
+                loss_hat, loss_mag = mr.AxisAng3(loss)
 
-                # Position
-                p[0] += loss_hat[0] * loss_theta
-                p[1] += loss_hat[1] * loss_theta
-                # Rotation
-                yaw = loss_hat[2] * loss_theta
-                R = piperik.z_axis_rotate(R, yaw, mode)
+                d_loss_mag = (loss_mag - prev_loss_mag)/Tf
+                prev_loss_mag = loss_mag
 
-                # Update target joint position
-                T_sd = mr.RpToTrans(R, p)
-                theta_end, status = piperik.IK_joint_velocity_limit(T_sd, theta_start, mode)
+                loss_theta = Kp_v * loss_mag + Kd_v * d_loss_mag
 
-                data_sh = client.read_shared_memory(name_sh)
-                data_sh[8:14] = theta_end
-                client.write_shared_memory(name_sh, data_sh)
+                if shared_control_signal == 1 and loss_mag > loss_threshold:
+                    # Get current pose
+                    theta_start = piper.get_joint_feedback_mr()
+                    T = piperik.fk(theta_start, mode)
+                    R, p = mr.TransToRp(T)
 
-                joint_feedback = piper.get_joint_feedback_mr()
-                timestamp = int(time.time() * 1000)
-                robot_state_msg = {
-                    "time": timestamp,
-                    "state": "initialize",
-                    "model": "agilex_piper",
-                    "joint_feedback": joint_feedback,
-                }
-                client.publish_message(robot_state_msg)
+                    # Position
+                    p[0] += loss_hat[0] * loss_theta
+                    p[1] += loss_hat[1] * loss_theta
+                    # Rotation
+                    yaw = loss_hat[2] * loss_theta
+                    R = piperik.z_axis_rotate(R, yaw, mode)
 
-            elif shared_control_signal == -1:
-                initial_joint_position = np.array([-0.09306611111164882, 0.47493111766136753, 1.9607769506067685, 0.9579791111166461,
-                 1.2210587777848327, 0.5382308888919987])
+                    # Update target joint position
+                    T_sd = mr.RpToTrans(R, p)
+                    theta_end, status = piperik.IK_joint_velocity_limit(T_sd, theta_start, mode)
 
-                data_sh = client.read_shared_memory(name_sh)
-                data_sh[8:14] = initial_joint_position
-                client.write_shared_memory(name_sh, data_sh)
+                    data_sh = client.read_shared_memory(name_sh)
+                    data_sh[8:14] = theta_end
+                    client.write_shared_memory(name_sh, data_sh)
 
-                joint_feedback = piper.get_joint_feedback_mr()
-                timestamp = int(time.time() * 1000)
-                robot_state_msg = {
-                    "time": timestamp,
-                    "state": "initialize",
-                    "model": "agilex_piper",
-                    "joint_feedback": joint_feedback,
-                }
-                client.publish_message(robot_state_msg)
+                    joint_feedback = piper.get_joint_feedback_mr()
+                    timestamp = int(time.time() * 1000)
+                    robot_state_msg = {
+                        "time": timestamp,
+                        "state": "initialize",
+                        "model": "agilex_piper",
+                        "joint_feedback": joint_feedback,
+                    }
+                    client.publish_message(robot_state_msg)
 
+                elif shared_control_signal == -1:
+                    initial_joint_position = np.array([-0.09306611111164882, 0.47493111766136753, 1.9607769506067685, 0.9579791111166461,
+                     1.2210587777848327, 0.5382308888919987])
 
-        # cv2.putText(left_image, f"Shared Control State: {shared_control_signal}", (20, 30),
-        #             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                    data_sh = client.read_shared_memory(name_sh)
+                    data_sh[8:14] = initial_joint_position
+                    client.write_shared_memory(name_sh, data_sh)
+
+                    joint_feedback = piper.get_joint_feedback_mr()
+                    timestamp = int(time.time() * 1000)
+                    robot_state_msg = {
+                        "time": timestamp,
+                        "state": "initialize",
+                        "model": "agilex_piper",
+                        "joint_feedback": joint_feedback,
+                    }
+                    client.publish_message(robot_state_msg)
+
+                cv2.putText(right_image, f"Number of Detection: {pack_num} ", (20, 120),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                cv2.putText(right_image, f"Loss Visual: {loss_mag: .4f} ", (20, 150),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+            else:
+                cv2.putText(right_image, f"No Detection ", (20, 120),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
             cv2.putText(right_image, f"fps: {fps}", (20, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
             cv2.putText(right_image, f"Shared Control On", (20, 60),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
             cv2.putText(right_image, f"Shared Control State: {shared_control_signal}", (20, 90),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            cv2.putText(right_image, f"Loss Visual: {loss_mag: .4f} ", (20, 120),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
 
             stereo_sender.send_frames(left_image, right_image)
+            pack_sorted_list_l.clear()
+            pack_sorted_list_r.clear()
 
             # cv2.imshow("left", left_image)
             # cv2.imshow("right", right_image)
 
-        # elapsed = time.time() - start
-        # print("elapsed", elapsed)
         else:
             cv2.putText(right_image, f"fps: {fps}", (20, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
