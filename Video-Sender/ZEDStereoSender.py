@@ -10,6 +10,7 @@ class ZEDStereoSender:
         self.signaling_urls = signaling_urls
         self.left_channel = left_channel
         self.right_channel = right_channel
+        self.subcam_channel = 'sora_liust_sub'
 
         # 各目の最新フレーム
         self.latest_left_frame = None
@@ -19,6 +20,7 @@ class ZEDStereoSender:
         # 各目のSora接続
         self.left_sendonly = None
         self.right_sendonly = None
+        self.sub_sendonly = None
 
     def initialize_sora_connections(self):
         """左目と右目のSora接続を初期化"""
@@ -38,6 +40,15 @@ class ZEDStereoSender:
         self.right_sendonly = Sendonly(
             signaling_urls=self.signaling_urls,
             channel_id=self.right_channel,
+            video=True,
+            audio=False,
+            video_codec_type="VP8",
+            video_bit_rate=5000,
+        )
+
+        self.sub_sendonly = Sendonly(
+            signaling_urls=self.signaling_urls,
+            channel_id=self.subcam_channel,
             video=True,
             audio=False,
             video_codec_type="VP8",
@@ -104,6 +115,17 @@ class ZEDStereoSender:
         if left_frame is not None and right_frame is not None:
             self.left_sendonly._video_source.on_captured(left_frame)
             self.right_sendonly._video_source.on_captured(right_frame)
+            return True
+        return False
+
+    def send_subcam_frames(self, subcam_frame):
+        """Send user-provided frames (from outside)"""
+        if self.sub_sendonly is None:
+            raise RuntimeError(
+                "Sora connections not initialized. Call initialize_sora_connections() and connect() first.")
+
+        if subcam_frame is not None:
+            self.sub_sendonly._video_source.on_captured(subcam_frame)
             return True
         return False
 

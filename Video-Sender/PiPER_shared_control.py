@@ -4,13 +4,34 @@ import numpy as np
 from PIPERControl import PIPERControl
 from ModernRoboticsIK import ModernRoboticsIK
 from YOLOSegPose import YOLOSegPose
-from MQTT_Client import MQTT_Client
+from MQTT_Client_2 import MQTT_Client
 from ZEDStereoSender import ZEDStereoSender
 import cv2
 
 np.set_printoptions(precision=6, suppress=True)
 
-class Undistortion():
+def ik_status(code):
+    status_list = [
+        ('normal', (0, 255, 0)),        # 0: green
+        ('velocity limit', (0, 255, 255)), # 1: yellow
+        ('joint limit', (255, 0, 255)), # 2: purple
+        ('IK failed', (0, 0, 255))      # 3: red
+    ]
+    if 0 <= code < len(status_list):
+        return status_list[code]
+    else:
+        return 'unknown', (255, 255, 255)  # default: white
+
+
+def record_joint(joint_trajectory, q):
+    joint_trajectory.append(q.copy())
+    if len(joint_trajectory) > 500:
+        joint_trajectory.pop(0)  # remove oldest
+    return joint_trajectory
+
+
+
+class Undistortion:
     def __init__(self):
         self.K = np.array([[788.41415049, 0., 655.01692926],
                                  [0., 787.3765135, 357.82862631],
@@ -38,10 +59,8 @@ piper.connect()
 time.sleep(0.5)
 
 name_sh = "RightArm"
-joint_topic = "joint"
-tool_topic = "tool"
-mqtt_mode = "local"
-client = MQTT_Client(joint_topic, tool_topic, mqtt_mode)
+arm_topic = 'right/'
+client = MQTT_Client(arm_topic, "local")
 
 undist = Undistortion()
 
@@ -69,10 +88,17 @@ if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
     if cap.isOpened() == 0:
         exit(-1)
-
-    # Set the video resolution to HD720 (2560*720)
+    # Set the video resolution to HD720 (2*1280*720)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2560)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+    # Open the Real Sense
+    cap_rs = cv2.VideoCapture(6)
+    if cap_rs.isOpened() == 0:
+        exit(-1)
+    # Set the video resolution to HD720 (1280*720)
+    cap_rs.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap_rs.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     stereo_sender = ZEDStereoSender(signaling_urls, left_channel, right_channel)
     stereo_sender.initialize_sora_connections()
@@ -80,39 +106,54 @@ if __name__ == "__main__":
     # connect once
     stereo_sender.left_sendonly.connect()
     stereo_sender.right_sendonly.connect()
+    stereo_sender.sub_sendonly.connect()
 
     client.start_mqtt()
     flag_shm = client.verify_shared_memory(name_sh)
     fps = 0
 
-    while flag_shm:
-        # Get a new frame from camera
+    IK_msg = 'Start'
+    IK_color = (0, 255, 0)
+
+    joint_traj_record = []
+
+    while True:
+        """ Get a new frame from camera """
         retval, frame = cap.read()
         left_right_image = np.split(frame, 2, axis=1)
 
+        # Image Get
+        left_image = left_right_image[0]
+        right_image = left_right_image[1]
+
+        # Image Undistortion
+        left_image = undist.show(left_image)
+        right_image = undist.show(right_image)
+
+        # Image Record (Option)
+        left_record = left_image.copy()
+        right_record = right_image.copy()
+
+        retval_rs, frame_rs = cap_rs.read()
+        stereo_sender.send_subcam_frames(frame_rs)
+
+        """ FPS """
         frame_count += 1
         if time.time() - prev_time > 1.0:
             fps = frame_count
             frame_count = 0
             prev_time = time.time()
 
-        left_image = left_right_image[0]
-        right_image = left_right_image[1]
-
-        left_image = undist.show(left_image)
-        right_image = undist.show(right_image)
-
-        left_record = left_image.copy()
-        right_record = right_image.copy()
-
+        """ Shared Control """
         shared_control_flag = client.get_shared_control_flag()
         if shared_control_flag == 1:
             shared_control_signal = client.get_shared_control_signal()
 
+            # YOLO
             yolo_seg_left.visualize(left_image)
             yolo_seg_right.visualize(right_image)
 
-            # object
+            # Sort detected objects
             pack_sorted_list_l = yolo_seg_left.get_sorted_items()
             pack_sorted_list_r = yolo_seg_right.get_sorted_items()
 
@@ -178,10 +219,12 @@ if __name__ == "__main__":
                     # Update target joint position
                     T_sd = mr.RpToTrans(R, p)
                     theta_end, status = piperik.IK_joint_velocity_limit(T_sd, theta_start, mode)
+                    IK_msg, IK_color = ik_status(status)
 
-                    data_sh = client.read_shared_memory(name_sh)
-                    data_sh[8:14] = theta_end
-                    client.write_shared_memory(name_sh, data_sh)
+                    if status == 0 or status == 1:
+                        data_sh = client.read_shared_memory(name_sh)
+                        data_sh[8:14] = theta_end
+                        client.write_shared_memory(name_sh, data_sh)
 
                     joint_feedback = piper.get_joint_feedback_mr()
                     timestamp = int(time.time() * 1000)
@@ -193,10 +236,14 @@ if __name__ == "__main__":
                     }
                     client.publish_message(robot_state_msg)
 
+                    joint_traj_record = record_joint(joint_traj_record, joint_feedback)
+
                 elif shared_control_signal == -1:
                     initial_joint_position = np.array([-0.09306611111164882, 0.47493111766136753, 1.9607769506067685, 0.9579791111166461,
                      1.2210587777848327, 0.5382308888919987])
-
+                    # print(joint_traj_record)
+                    # for joint in reversed(joint_traj_record):
+                    #     print("joint record", joint)
                     data_sh = client.read_shared_memory(name_sh)
                     data_sh[8:14] = initial_joint_position
                     client.write_shared_memory(name_sh, data_sh)
@@ -211,10 +258,17 @@ if __name__ == "__main__":
                     }
                     client.publish_message(robot_state_msg)
 
+                    IK_msg = "Reset"
+                    IK_color = (0, 255, 0)
+                    # joint_traj_record.clear()
+
                 cv2.putText(right_image, f"Number of Detection: {pack_num} ", (20, 120),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 cv2.putText(right_image, f"Loss Visual: {loss_mag: .4f} ", (20, 150),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+                cv2.putText(right_image, "IK Status: " + IK_msg, (1000, 90),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, IK_color, 2)
 
             else:
                 cv2.putText(right_image, f"No Detection ", (20, 120),

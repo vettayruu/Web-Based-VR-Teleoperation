@@ -31,16 +31,16 @@ if __name__ == "__main__":
     #
     # atexit.register(cleanup)
 
-    can_port = "can0"
+    can_port = "can1"
     piper = PIPERControl(can_port)
     piper.connect()
     piper.enable()
     time.sleep(1)
 
-    name = "RightArm"
+    name = "LeftArm"
     joint_topic = "joint"
     tool_topic = "tool"
-    arm_topic = 'right/'
+    arm_topic = 'left/'
     mode = "local"
     # client = MQTT_Client(joint_topic, tool_topic, mode)
     client = MQTT_Client(arm_topic, mode)
@@ -77,9 +77,9 @@ if __name__ == "__main__":
         # Send robot current state to MQTT
         robot_state_msg = {
             "time": timestamp,
-            "state": "initialize",
-            "model": "agilex_piper",
-            "joint_feedback": joint_feedback,
+            "state_left": "initialize",
+            "model_left": "agilex_piper",
+            "joint_feedback_left": joint_feedback,
         }
         client.publish_message(robot_state_msg)
         time.sleep(1.0)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         if equal:
             robot_state_msg = {
-                "state": "ready",
+                "state_left": "ready",
             }
             client.publish_message(robot_state_msg)
             print("Robot Ready.")
