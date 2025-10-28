@@ -389,7 +389,8 @@ export default function DynamicHome(props) {
   // Remote Webcam
   const [webcamStream1, setWebcamStream1] = React.useState(null);
   const [webcamStream2, setWebcamStream2] = React.useState(null);
-
+  const [webcamStream3, setWebcamStream3] = React.useState(null);
+  
   // Robot Tool
   const toolNameList = ["No tool"]
   const [toolName,set_toolName] = React.useState(toolNameList[0])
@@ -737,12 +738,12 @@ export default function DynamicHome(props) {
     let intervalId = null;
     if (button_b_on) {
       intervalId = setInterval(() => {
-        setThetaTool(prev => clampTool(prev + 0.5));
+        setThetaTool(prev => clampTool(prev + 2.5));
       }, dt); 
     }
     else if (button_a_on) {
       intervalId = setInterval(() => {
-        setThetaTool(prev => clampTool(prev - 0.5));
+        setThetaTool(prev => clampTool(prev - 2.5));
       }, dt); 
     }
     return () => {
@@ -1193,7 +1194,7 @@ export default function DynamicHome(props) {
   }, [rendered, vrModeRef.current, thumbstick_left, thumbstick_right, grip_on, grip_on_left]);
 
 
-  /* ========================= Web Controller Inputs =========================*/
+  /* ========================= Robot Scene Inputs =========================*/
   const controllerProps = React.useMemo(() => ({
     robotName, robotNameList, set_robotName,
     toolName, toolNameList, set_toolName,
@@ -1273,7 +1274,6 @@ export default function DynamicHome(props) {
   const thetaToolMQTT = React.useRef(theta_tool);
   React.useEffect(() => {
     thetaToolMQTT.current = theta_tool;
-    console.log("Theta Tool MQTT Updated:", theta_tool);
   }, [theta_tool]);
 
   const thetaBodyLeftMQTT = React.useRef(theta_body_left);
@@ -1291,24 +1291,24 @@ export default function DynamicHome(props) {
     thetaBodyCamMQTT.current = theta_body_cam.map(val => Number(val.toFixed(2)));
   }, [theta_body_cam]);
 
-  React.useEffect(() => {
-    window.requestAnimationFrame(onAnimationMQTT);
-  }, []);
+  // React.useEffect(() => {
+  //   window.requestAnimationFrame(onAnimationMQTT);
+  // }, []);
   
-  // web MQTT
-  const onAnimationMQTT = (time) =>{
-    const robot_state_json = JSON.stringify({
-      time: time,
-      joint: thetaBodyMQTT.current,
-      tool: thetaToolMQTT.current,
-      joint_left: thetaBodyLeftMQTT.current,
-      tool_left: thetaToolLeftMQTT.current,
-      cam: thetaBodyCamMQTT.current
-    });
-    // publishMQTT(MQTT_ROBOT_STATE_TOPIC + robotIDRef.current , robot_state_json); 
-    // console.log("onAnimationMQTT published:", robot_state_json);
-    window.requestAnimationFrame(onAnimationMQTT); 
-  }
+  // // web MQTT
+  // const onAnimationMQTT = (time) =>{
+  //   const robot_state_json = JSON.stringify({
+  //     time: time,
+  //     joint: thetaBodyMQTT.current,
+  //     tool: thetaToolMQTT.current,
+  //     joint_left: thetaBodyLeftMQTT.current,
+  //     tool_left: thetaToolLeftMQTT.current,
+  //     cam: thetaBodyCamMQTT.current
+  //   });
+  //   // publishMQTT(MQTT_ROBOT_STATE_TOPIC + robotIDRef.current , robot_state_json); 
+  //   // console.log("onAnimationMQTT published:", robot_state_json);
+  //   window.requestAnimationFrame(onAnimationMQTT); 
+  // }
 
   // Publish: VR MQTT Control
   const receiveStateRef = React.useRef(true); // VR MQTT switch
@@ -1319,27 +1319,76 @@ export default function DynamicHome(props) {
     }
   }
   
-  React.useEffect(() => {
-      const ctl_json = JSON.stringify({
-        timestamp: Date.now(),
-        joint: thetaBodyMQTT.current,
-        tool: thetaToolMQTT.current,
-        joint_left: thetaBodyLeftMQTT.current,
-        tool_left: thetaToolLeftMQTT.current,
-        cam: thetaBodyCamMQTT.current
-      });
-      if ((mqttclient != null) && receiveStateRef.current && !shareControl && !showMenu) {
-        publishMQTT(MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
-        // console.log("onXRFrameMQTT published:", MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
-      }
-  }, [
-    thetaBodyMQTT.current, 
-    thetaToolMQTT.current, 
-    thetaBodyLeftMQTT.current, 
-    thetaToolLeftMQTT.current, 
-    thetaBodyCamMQTT.current
-  ]);
+  // React.useEffect(() => {
+  //     const ctl_json = JSON.stringify({
+  //       timestamp: Date.now(),
+  //       joint: thetaBodyMQTT.current,
+  //       tool: thetaToolMQTT.current,
+  //       joint_left: thetaBodyLeftMQTT.current,
+  //       tool_left: thetaToolLeftMQTT.current,
+  //       cam: thetaBodyCamMQTT.current
+  //     });
+  //     if ((mqttclient != null) && receiveStateRef.current && !shareControl && !showMenu) {
+  //       publishMQTT(MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
+  //       // console.log("onXRFrameMQTT published:", MQTT_CTRL_TOPIC + robotIDRef.current, ctl_json);
+  //     }
+  // }, [
+  //   thetaBodyMQTT.current, 
+  //   thetaToolMQTT.current, 
+  //   thetaBodyLeftMQTT.current, 
+  //   thetaToolLeftMQTT.current, 
+  //   thetaBodyCamMQTT.current
+  // ]);
 
+  React.useEffect(() => {
+    const json_msg = JSON.stringify({
+      timestamp: Date.now(),
+      joint: thetaBodyMQTT.current,
+    });
+    if ((mqttclient != null) && receiveStateRef.current && rendered && !shareControl && !showMenu) {
+      publishMQTT(MQTT_CTRL_TOPIC + 'right/' + 'joint/' + robotIDRef.current, json_msg);
+    }
+  }, [thetaBodyMQTT.current]);
+
+  React.useEffect(() => {
+    const json_msg = JSON.stringify({
+      timestamp: Date.now(),
+      tool: thetaToolMQTT.current,
+    });
+    if ((mqttclient != null) && receiveStateRef.current && rendered && !showMenu) {
+      publishMQTT(MQTT_CTRL_TOPIC + 'right/' + 'tool/' + robotIDRef.current, json_msg);
+    }
+  }, [thetaToolMQTT.current, robot_state]);
+
+  React.useEffect(() => {
+    const json_msg = JSON.stringify({
+      timestamp: Date.now(),
+      joint: thetaBodyLeftMQTT.current,
+    });
+    if ((mqttclient != null) && receiveStateRef.current && rendered && !showMenu) {
+      publishMQTT(MQTT_CTRL_TOPIC + 'left/' + 'joint/' + robotIDRef.current, json_msg);
+    }
+  }, [thetaBodyLeftMQTT.current, robot_state]);
+
+  React.useEffect(() => {
+    const json_msg = JSON.stringify({
+      timestamp: Date.now(),
+      tool: thetaToolLeftMQTT.current,
+    });
+    if ((mqttclient != null) && receiveStateRef.current && rendered && !showMenu) {
+      publishMQTT(MQTT_CTRL_TOPIC + 'left/' + 'tool/' + robotIDRef.current, json_msg);
+    }
+  }, [thetaToolLeftMQTT.current]);
+
+  React.useEffect(() => {
+    const json_msg = JSON.stringify({
+      timestamp: Date.now(),
+      joint: thetaBodyCamMQTT.current,
+    });
+    if ((mqttclient != null) && receiveStateRef.current && rendered && !showMenu) {
+      publishMQTT(MQTT_CTRL_TOPIC + 'cam/' + 'joint/' + robotIDRef.current, json_msg);
+    }
+  }, [thetaBodyCamMQTT.current]);
 
   // Time Sync MQTT
   const [Timeoffset, setTimeOffset] = React.useState(0);
@@ -1454,7 +1503,8 @@ export default function DynamicHome(props) {
     <>
       <RemoteWebcam 
         onVideoStream1={setWebcamStream1}
-        onVideoStream2={setWebcamStream2} />
+        onVideoStream2={setWebcamStream2}
+        onVideoStream3={setWebcamStream3} />
       <RobotScene
         robot_list={robot_list}
         rendered={rendered}
@@ -1497,6 +1547,7 @@ export default function DynamicHome(props) {
         modelOpacity={modelOpacity}
         webcamStream1={webcamStream1}
         webcamStream2={webcamStream2}
+        webcamStream3={webcamStream3}
         showMenu={showMenu}
       />
     </>

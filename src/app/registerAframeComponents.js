@@ -35,6 +35,7 @@ export default function registerAframeComponents(options) {
     setControlMode,
     setLeftArmMode,
     setIndicator,
+    setShareControl,
 
     // Collision Check
     collision,
@@ -521,6 +522,8 @@ export default function registerAframeComponents(options) {
     }
   });
 
+  
+
 
   /* Menu */
   AFRAME.registerComponent('highlight', {
@@ -591,6 +594,10 @@ export default function registerAframeComponents(options) {
             setIndicator("true");
           } else if (btnId === "button6") {
             setIndicator("false");
+          } else if (btnId === "button7") {
+            setShareControl(true);
+          } else if (btnId === "button8") {
+            setShareControl(false);
           }
         });
       }

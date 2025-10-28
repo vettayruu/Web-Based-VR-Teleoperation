@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Script from 'next/script';
 
-export default function RemoteWebcam({ onVideoStream1, onVideoStream2 }) {
+export default function RemoteWebcam({ onVideoStream1, onVideoStream2, onVideoStream3 }) {
   const [soraReady, setSoraReady] = React.useState(false);
 
   React.useEffect(() => {
@@ -39,8 +39,20 @@ export default function RemoteWebcam({ onVideoStream1, onVideoStream2 }) {
         }
       });
       recvonly_webcam2.connect();
+
+      // Webcam 3
+      const recvonly_webcam3 = sora.recvonly('sora_liust_sub', options);
+      recvonly_webcam3.on('track', event => {
+        if (event.track.kind === 'video') {
+          const mediaStream = new MediaStream();
+          mediaStream.addTrack(event.track);
+          if (onVideoStream3) onVideoStream3(mediaStream);
+        }
+      });
+      recvonly_webcam3.connect();
+
     }
-  }, [soraReady, onVideoStream1, onVideoStream2]);
+  }, [soraReady, onVideoStream1, onVideoStream2, onVideoStream3]);
 
   return (
     <>

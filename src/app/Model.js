@@ -11,7 +11,7 @@ const Piper = (props) => {
   const W_34 = 0.0219;
   const { 
     theta_body = [0,0,0,0,0,0], 
-    theta_tool = 24, 
+    theta_tool = 0, 
     position = "0 0 0",     
     rotation = "0 0 0",      
     robotId = "robot1",     

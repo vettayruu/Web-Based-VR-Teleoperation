@@ -35,11 +35,11 @@ export default function RobotScene(props) {
     euler_ee_cam,
 
     // Others
-    modelOpacity, 
-    webcamStream1, 
-    webcamStream2,
-    dsp_message,
-    showMenu
+    // modelOpacity, 
+    // webcamStream1, 
+    // webcamStream2,
+    // dsp_message,
+    showMenu,
   } = props;
 
   const getStateCodeColor = (code) => {
@@ -65,6 +65,8 @@ export default function RobotScene(props) {
   const euler_ee_deg_left = euler_ee_left.map(rad2deg);
   const euler_ee_deg_cam = euler_ee_cam.map(rad2deg);
   // const vr_controller_euler_deg = vr_controller_euler.map(rad2deg);
+
+  const now = Date.now();
 
   const scale = 0.1;
   const xAxis = {
@@ -108,7 +110,7 @@ export default function RobotScene(props) {
         videoEl.play();
       }
     }
-  }, [props.webcamStream1]);
+  }, [now]);
 
   React.useEffect(() => {
     if (props.webcamStream2) {
@@ -118,7 +120,18 @@ export default function RobotScene(props) {
         videoEl.play();
       }
     }
-  }, [props.webcamStream2]);
+  }, [now]);
+
+  React.useEffect(() => {
+    if (props.webcamStream3) {
+      const videoEl = document.getElementById('subVideo');
+      if (videoEl && videoEl.srcObject !== props.webcamStream3) {
+        videoEl.srcObject = props.webcamStream3;
+        videoEl.play();
+      }
+    }
+  }, [now]);
+
 
   if (!rendered) {
     return (
@@ -145,7 +158,7 @@ export default function RobotScene(props) {
             {/* Background Plane */}
             <a-plane
               width="1.2"
-              height="1.0"
+              height="1.2"
               color="#222"
               opacity="1.0"
               position="0 0 0"
@@ -187,6 +200,18 @@ export default function RobotScene(props) {
               material="color: white; opacity: 0.95"
             ><a-text value="Indicator Off" align="center" color="#fff" width="1.0" position="0 0 0.01"></a-text></a-entity>
 
+            {/* Button 7 */}
+            <a-entity id="button7" position="-0.3 -0.4 0.01" class="raycastable menu-button"
+              geometry="primitive: plane; width: 0.4; height: 0.18"
+              material="color: white; opacity: 0.95"
+            ><a-text value="Shared Control On" align="center" color="#fff" width="1.0" position="0 0 0.01"></a-text></a-entity>
+
+            {/* Button 8 */}
+            <a-entity id="button8" position="0.3 -0.4 0.01" class="raycastable menu-button"
+              geometry="primitive: plane; width: 0.4; height: 0.18"
+              material="color: white; opacity: 0.95"
+            ><a-text value="Shared Control Off" align="center" color="#fff" width="1.0" position="0 0 0.01"></a-text></a-entity>
+
           </a-entity>
         )}
 
@@ -194,8 +219,8 @@ export default function RobotScene(props) {
         {showMenu && (<a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .raycastable" line="color: #118A7E"></a-entity>)}
 
         {/* VR Controller */}
-        <a-entity oculus-touch-controls="hand: right" vr-controller-right visible={true}></a-entity>
-        <a-entity oculus-touch-controls="hand: left" vr-controller-left visible={true}></a-entity>
+        <a-entity oculus-touch-controls="hand: right" vr-controller-right visible={true} opacity={0.5}></a-entity>
+        <a-entity oculus-touch-controls="hand: left" vr-controller-left visible={true} opacity={0.5}></a-entity>
 
         {/* Robot Model*/}
         <Assets robot_list={robot_list} viewer={props.viewer} monitor={props.monitor}/>
@@ -211,6 +236,7 @@ export default function RobotScene(props) {
         <a-assets>
           <video id="leftVideo" autoPlay playsInline crossOrigin="anonymous" muted></video>
           <video id="rightVideo" autoPlay playsInline crossOrigin="anonymous" muted></video>
+          <video id="subVideo" autoPlay playsInline crossOrigin="anonymous" muted></video>
         </a-assets>
 
         {/* Curved Image For 720P original camera frame */}
@@ -281,6 +307,28 @@ export default function RobotScene(props) {
           stereo-plane="eye: right; videoId: rightVideo"
           visible="true"
         ></a-plane>
+
+        <a-plane
+          id="subcam-curved"
+          height="1.5"
+          width="2.3"
+          position="1.1 0.0 -2.0" // 1080p position="0.19 1.0 -2.3"; 720p position="0.16 1.0 -2.3"
+          scale="0.6 0.6 0.2"
+          stereo-plane="eye: left; videoId: subVideo"
+          visible="true"
+        ></a-plane>
+
+        <a-plane
+          id="subcam-curved"
+          height="1.5"
+          width="2.3"
+          position="1.1 0.0 -2.0" // 1080p position="0.19 1.0 -2.3"; 720p position="0.16 1.0 -2.3"
+          scale="0.6 0.6 0.2"
+          stereo-plane="eye: right; videoId: subVideo"
+          visible="true"
+        ></a-plane>
+
+
 
         {/* <a-sphere
           id="left-curved"
