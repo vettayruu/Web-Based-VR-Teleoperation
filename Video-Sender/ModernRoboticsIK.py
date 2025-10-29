@@ -48,7 +48,7 @@ class ModernRoboticsIK():
             error_code: 状态码
         """
 
-        max_joint_velocity = 6.5   # 最大关节速度限制
+        max_joint_velocity = 5.5   # 最大关节速度限制
 
         M = self.robotParams["M"]
         Slist = self.robotParams["Slist"]
@@ -59,9 +59,9 @@ class ModernRoboticsIK():
 
         # ---------- 求逆运动学 ----------
         if VR_Control_Mode == 'inBody':
-            thetalist_sol, success = mr.IKinBody(Blist, M, T_sd, theta_body, 1e-6, 1e-6)
+            thetalist_sol, success = mr.IKinBody(Blist, M, T_sd, theta_body, 1e-5, 1e-5)
         elif VR_Control_Mode == 'inSpace':
-            thetalist_sol, success = mr.IKinSpace(Slist, M, T_sd, theta_body, 1e-6, 1e-6)
+            thetalist_sol, success = mr.IKinSpace(Slist, M, T_sd, theta_body, 1e-5, 1e-5)
         else:
             raise ValueError("Invalid VR_Control_Mode: must be 'inBody' or 'inSpace'")
 
@@ -145,19 +145,42 @@ class ModernRoboticsIK():
 
         return R_new
 
-    # def joint_plan(self, theta_start, theta_end):
-    #     error = theta_end - theta_start
-    #     d_error = (error - prev_error) / Tf
-    #     mse = np.mean(error ** 2)  # Mean Square Error
-    #     rmse = np.sqrt(mse)
-    #
-    #     # PD control
-    #     control_signal = theta_start + Kp * error + Kd * d_error
-    #     prev_error = error.copy()
-    #
-    #     # Trajectory Plan
-    #     theta_target = control_signal
-    #     if rmse > 0.002:
-    #         theta_traj = mr.JointTrajectory(theta_start, theta_target, Tf, N, method)
-    #         for theta in theta_traj:
-    #             piper_interface.joint_control_offset(theta, 60)
+    def relativeRMatrixtoScrewAxis(self, relativeR):
+        # Calculate so(3) matrix using MatrixLog3
+        so3mat = mr.MatrixLog3(relativeR)
+
+        # Extract omega_theta vector from so(3) matrix
+        omega_theta = mr.so3ToVec(so3mat)
+
+        # Calculate magnitude (theta) using JavaScript array operations
+        theta = np.sqrt(
+            omega_theta[0] * omega_theta[0] +
+            omega_theta[1] * omega_theta[1] +
+            omega_theta[2] * omega_theta[2]
+        )
+
+        if (theta < 1e-6):
+            # If theta is very small, return zero vector
+            omega_hat = [0, 0, 0]
+        else:
+            # Normalize omega_theta to get unit axis vector
+            omega_hat = [
+                omega_theta[0] / theta,
+                omega_theta[1] / theta,
+                omega_theta[2] / theta
+            ]
+
+        return omega_hat, theta
+
+    def ScrewAxisToRelativeRMatrix(self, omega_hat, theta):
+        omega_theta =[
+            omega_hat[0] * theta,
+            omega_hat[1] * theta,
+            omega_hat[2] * theta
+            ]
+
+        so3mat = mr.VecToso3(omega_theta)
+        R_relative = mr.MatrixExp3(so3mat)
+
+        return R_relative
+
