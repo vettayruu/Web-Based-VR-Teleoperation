@@ -9,17 +9,17 @@ import numpy as np
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
-USER_UUID = "d514aa76-a6cf-4718-9a8d-db69e330229e-liust"  # VR
-# USER_UUID = "42e98ca9-5d60-405b-8cb9-d1ed9f1c26a5-liust" # Browser
+# USER_UUID = "d514aa76-a6cf-4718-9a8d-db69e330229e-liust"  # VR
+USER_UUID = "42e98ca9-5d60-405b-8cb9-d1ed9f1c26a5-liust" # Browser
 ROBOT_UUID = os.getenv("ROBOT_UUID", "no-uuid")
 ROBOT_MODEL = os.getenv("ROBOT_MODEL", "piper")
 MQTT_MANAGE_TOPIC = os.getenv("MQTT_MANAGE_TOPIC", "dev")
 MQTT_MANAGE_RCV_TOPIC = os.getenv("MQTT_MANAGE_RCV_TOPIC", "dev") + "/" + ROBOT_UUID
 
 class MQTT_Client():
-    def __init__(self, joint_topic, tool_topic, mode):
-        self.joint_topic = joint_topic
-        self.tool_topic = tool_topic
+    def __init__(self, arm, mode):
+        self.joint_topic = arm + 'joint/'
+        self.tool_topic = arm + 'tool/'
         self.mode = mode
 
         self.client = mqtt.Client(transport="websockets")
@@ -29,10 +29,13 @@ class MQTT_Client():
         self.MQTT_UCLAB_SERVER = "sora2.uclab.jp"
         self.MQTT_UCLAB_PORT = 1883
 
-        self.MQTT_CTRL_TOPIC = "control/" + USER_UUID
+        self.MQTT_CTRL_JOINT_TOPIC = "control/" + self.joint_topic + USER_UUID
+        self.MQTT_CTRL_TOOL_TOPIC = "control/" + self.tool_topic + USER_UUID
+
         self.MQTT_TIME_TOPIC = "time/" + USER_UUID
         self.MQTT_SHARE_TOPIC = "share/" + USER_UUID
         self.MQTT_ROBOT_STATE_TOPIC = "robot/" + USER_UUID
+        self.MQTT_VR_TOPIC = "vr/" + "right/" + USER_UUID
 
         self.time_offset = 0
         self.time_vr = 0
@@ -42,13 +45,19 @@ class MQTT_Client():
         self.shared_signal = 0 # shared_control_signal
         self.shared_control_flag = 0
 
+        self.vr_time = 0
+        self.p_diff = [0,0,0]
+        self.R_relative = [[1,0,0],[0,1,0],[0,0,1]]
+
     def on_connect(self, client, userdata, flags, rc):
-        print("MQTT:Connected with result code " + str(rc), "subscribe topic:",
-              self.MQTT_TIME_TOPIC, self.MQTT_CTRL_TOPIC, self.MQTT_SHARE_TOPIC)
+        # print("MQTT:Connected with result code " + str(rc), "subscribe topic:",
+              # self.MQTT_TIME_TOPIC, self.MQTT_CTRL_TOPIC, self.MQTT_SHARE_TOPIC)
 
         self.client.subscribe(self.MQTT_TIME_TOPIC)  # time
-        self.client.subscribe(self.MQTT_CTRL_TOPIC)  # control
+        self.client.subscribe(self.MQTT_CTRL_JOINT_TOPIC)  # control
+        self.client.subscribe(self.MQTT_CTRL_TOOL_TOPIC)  # control
         self.client.subscribe(self.MQTT_SHARE_TOPIC) # shared control
+        self.client.subscribe(self.MQTT_VR_TOPIC)  # shared control
 
         # ここで、MyID Register すべき
         my_info = {
@@ -69,38 +78,39 @@ class MQTT_Client():
             print("Unexpected disconnection.")
 
     def on_message(self, client, userdata, msg):
-        if msg.topic == MQTT_MANAGE_RCV_TOPIC:  # 受信先を指定された場合
-            js = json.loads(msg.payload)
-            if "controller" in js:
-                if "devId" in js:
-                    self.MQTT_CTRL_TOPIC = "control/" + js["devId"]
-                    self.client.subscribe(self.MQTT_CTRL_TOPIC)
-                    print("Receive Teleoperation Control msg, then listen", self.MQTT_CTRL_TOPIC)
+        # if msg.topic == MQTT_MANAGE_RCV_TOPIC:  # 受信先を指定された場合
+        #     js = json.loads(msg.payload)
+            # if "controller" in js:
+            #     if "devId" in js:
+            #         self.MQTT_CTRL_TOPIC = "control/" + js["devId"]
+            #         self.client.subscribe(self.MQTT_CTRL_TOPIC)
+            #         print("Receive Teleoperation Control msg, then listen", self.MQTT_CTRL_TOPIC)
+            #
+            #         self.MQTT_TIME_TOPIC = "time/" + js["devId"]
+            #         self.client.subscribe(self.MQTT_TIME_TOPIC)
+            #         print("Receive Time msg, then listen", self.MQTT_TIME_TOPIC)
+            #
+            #         self.MQTT_SHARE_TOPIC = "share/" + js["devId"]
+            #         self.client.subscribe(self.MQTT_SHARE_TOPIC)
+            #         print("Receive Shared Control msg, then listen", self.MQTT_SHARE_TOPIC)
 
-                    self.MQTT_TIME_TOPIC = "time/" + js["devId"]
-                    self.client.subscribe(self.MQTT_TIME_TOPIC)
-                    print("Receive Time msg, then listen", self.MQTT_TIME_TOPIC)
-
-                    self.MQTT_SHARE_TOPIC = "share/" + js["devId"]
-                    self.client.subscribe(self.MQTT_SHARE_TOPIC)
-                    print("Receive Shared Control msg, then listen", self.MQTT_SHARE_TOPIC)
-
-        if msg.topic == self.MQTT_CTRL_TOPIC:
+        if msg.topic == self.MQTT_CTRL_JOINT_TOPIC:
             # Message ThetaBody
-            js_joints = json.loads(msg.payload)
-            joints = js_joints[self.joint_topic]
+            js_msg = json.loads(msg.payload)
+            joints = js_msg['joint']
             thetaBody = [joints[i] if i < len(joints) else 0 for i in range(7)]
-            # print("Set thetaBody:", thetaBody)
 
+            self.pose[8:15] = thetaBody
+            self.time_vr = js_msg["timestamp"]
+
+        elif msg.topic == self.MQTT_CTRL_TOOL_TOPIC:
             # Message ThetaTool
-            js_tool = js_joints[self.tool_topic]
+            js_msg = json.loads(msg.payload)
+            js_tool = js_msg['tool']
             thetaTool = js_tool
 
             # Save to shared memory
-            self.pose[8:15] = thetaBody
             self.pose[15] = thetaTool
-
-            self.time_vr = js_joints["timestamp"]
 
         elif msg.topic == self.MQTT_TIME_TOPIC:
             js_time = json.loads(msg.payload)
@@ -112,7 +122,12 @@ class MQTT_Client():
             self.shared_control_flag = js_share["flag"]
             self.shared_signal = js_share["share"]
 
-            # print("Shared Control Signal:", self.shared_signal)
+        elif msg.topic == self.MQTT_VR_TOPIC:
+            print(self.MQTT_VR_TOPIC)
+            js_vr = json.loads(msg.payload)
+            self.vr_time = js_vr["timestamp"]
+            self.p_diff = js_vr["p_diff"]
+            self.R_relative = js_vr["R_relative"]
 
         else:
             print("not subscribe msg", msg.topic)
@@ -231,3 +246,6 @@ class MQTT_Client():
 
     def get_shared_control_flag(self):
         return self.shared_control_flag
+
+    def get_vr_diff(self):
+        return self.vr_time, self.p_diff, self.R_relative
