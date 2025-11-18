@@ -157,6 +157,39 @@ On Chrome, you can install the **Immersive Web Emulator** WebXR plugin:
 After installation, press **F12** to open Developer Tools.  
 You will find the **WebXR** tab in the developer tools bar, which allows you to emulate VR devices and test WebXR features directly in your browser.
 
+### 🧪 Run in Simulator
+
+You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobotics.com/).
+
+1. **Download CoppeliaSim**
+
+   Visit the official website to download the latest version:
+
+   ```
+   https://www.coppeliarobotics.com/
+   ```
+
+2. **Launch CoppeliaSim**
+
+   - **On Ubuntu:** Navigate to your CoppeliaSim installation directory and run:
+     ```bash
+     ./coppeliaSim
+     ```
+   - **On Windows:** Run the application directly by double-clicking the executable.
+
+3. **Load the simulation scene**
+
+   In CoppeliaSim, open the scene file `"piper_robot_sample.ttt"` located in the `Simulation` folder.
+
+4. **Start the simulation**
+
+   Click the "Play" button in CoppeliaSim to start the simulation.
+
+5. **Run the simulator control script**
+   ```bash
+   python MQTT_Robot_Simulator.py
+   ```
+
 ## Step 4: Run Your Robot
 
 ###  🧩 Step 2: Run PiPER Controller (Robot Site)
@@ -263,37 +296,7 @@ Follow the steps below to control the **AgileX-PiPER** robot via MQTT:
      python MQTT_Robot_Control.py
      ```
 
-### 🧪 Run in Simulator
-You can also simulate PiPER Metawork MQTT robot control using [CoppeliaSim](https://www.coppeliarobotics.com/).
 
-1. **Download CoppeliaSim**
-
-   Visit the official website to download the latest version:
-
-   ```arduion
-   https://www.coppeliarobotics.com/
-   ```
-
-3. **Launch CoppeliaSim**
-
-   Navigate to your CoppeliaSim installation directory and run:
-  
-    ```bash
-    ./coppeliaSim
-    ```
-
-4. **Load the simulation scene**
-
-   Open the scene file: "piper_robot_sample.ttt" in the floder "AgileX-PiPER-MetworkMQTT"
-
-5. **Start the simulation**
-
-   Click the "Play" button in CoppeliaSim to start the simulation.
-
-6. **Run the simulator control script**
-   ```bash
-   python MQTT_Robot_Simulator.py
-   ```
 
 ## 🕶️ Open MQTT Controller in VR
 
