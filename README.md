@@ -196,6 +196,8 @@ You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobo
    https://192.168.197.39:3000/
    ```
 
+   And Click `AR` button to enter the AR mode.
+
 6. **Run the simulator control script**
    ```bash
    python MQTT_Robot_Simulator.py
