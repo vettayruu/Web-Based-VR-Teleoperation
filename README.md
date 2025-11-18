@@ -128,17 +128,22 @@ mosquitto -v
 
 ### 5. Test Your MQTT Broker
 
-To test publishing a topic, run `local_mqtt_test.py` in the folder `Agilex-PiPER-MetaworkMQTT`:
-```
-python local_mqtt_test.py
+To test publishing a topic, navigate to the `MQTT_Client` folder and run:
+
+**Publish a test message:**
+```bash
+python local_mqtt_test_pub.py
 ```
 
-To test subscribing to a topic, run `MQTT_Topic_list.py`:
+**Subscribe to the test message:**
+```bash
+python local_mqtt_test_sub.py
 ```
+
+To check all topics in MQTT, run:
+```bash
 python MQTT_Topic_list.py
 ```
-
-You can also use `MQTT_Topic_list.py` to confirm the UUID from your VR device with the topic `mgr/request`.
 
 ---
 ## Step 3: Test with WebXR
