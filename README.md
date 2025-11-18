@@ -1,4 +1,4 @@
-# MetaworkMQTT Protocol-Based PiPER Controller
+# Web-Based VR Teleoperation System
 
 <div align="center">
   <img src="./MQTT_Control_Framework.svg" alt="System Architecture" width="1000"/>
