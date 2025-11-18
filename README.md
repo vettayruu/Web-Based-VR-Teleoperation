@@ -1,3 +1,10 @@
+# MetaworkMQTT Protocol-Based PiPER Controller
+
+<div align="center">
+  <img src="./MQTT_Control_Framework.svg" alt="System Architecture" width="1000"/>
+  <p><em>Figure 1: System Architecture of PiPER Control via MetaworkMQTT</em></p>
+</div>
+
 ## 📑 Table of Contents
 - [Quick Start](#quick-start)
 - [Run MQTT Controller](#step-1-run-mqtt-controller-user-site)
@@ -9,13 +16,6 @@
 - [Citations](#citations)
 - [Demo Videos](#demo-videos)
 - [Python Packages](#python-packages)
-
-# MetaworkMQTT Protocol-Based PiPER Controller
-
-<div align="center">
-  <img src="./MQTT_Control_Framework.svg" alt="System Architecture" width="1000"/>
-  <p><em>Figure 1: System Architecture of PiPER Control via MetaworkMQTT</em></p>
-</div>
 
 ## 🚀 Quick Start
 
