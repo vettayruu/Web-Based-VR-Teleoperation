@@ -8,7 +8,7 @@
 ## Quick Start
 - [Step 1: Run HTTPS Server](#step-1-run-https-server)
 - [Step 2: Build MQTT Broker](#step-2-build-mqtt-broker)
-- [Step 3: Test with WebXR](#step-3-test-with-webxr)
+- [Step 3: Test with WebXR and Simulator](#step-3-test-with-webxr-and-simulator)
 - [Simulator](#run-in-simulator)
 - [VR Controller](#open-mqtt-controller-in-vr)
 - [Controller Operations](#controller-operations)
@@ -146,7 +146,7 @@ python MQTT_Topic_list.py
 ```
 
 ---
-## Step 3: Test with WebXR
+## Step 3: Test with WebXR and Simulator
 
 If you don't have a VR device, you can use WebXR tools for debugging.
 
