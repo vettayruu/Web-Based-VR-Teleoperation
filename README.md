@@ -148,34 +148,16 @@ python MQTT_Topic_list.py
 ---
 ## Step 3: Test with WebXR
 
-🌐 After the server is running, you can access the VR Viewer in your browser by appending /viewer to the server address. 
+If you don't have a VR device, you can use WebXR tools for debugging.
 
-   Open the Viewer in your browser:
-   ```arduion
-   https://<your-server-address>/viewer
-   ```
+On Chrome, you can install the **Immersive Web Emulator** WebXR plugin:
 
-  For example:
-  ```arduion
-  https://192.168.197.37:3000/viewer/
-  ```
-  This interface is used to visualize and send VR controller data via MQTT.
+[Immersive Web Emulator (Chrome Web Store)](https://chromewebstore.google.com/detail/immersive-web-emulator/cgffilbpcibhmcfbgggfhfolhkfbhmik)
 
-📊 You can also access the status monitor via the following URL:
-```arduion
-https://sora2.uclab.jp/menroll
-```
-This page provides a real-time interface for observing user information.
+After installation, press **F12** to open Developer Tools.  
+You will find the **WebXR** tab in the developer tools bar, which allows you to emulate VR devices and test WebXR features directly in your browser.
 
-🛠 Customize Your Project Name
-
-To differentiate your project from others, it is **recommended to change the project name** in the `package.json` file.
-
-Edit line 2 of `package.json`:
-
-```json
-"name": "PiPER-control-<YourName>",
-```
+## Step 4: Run Your Robot
 
 ###  🧩 Step 2: Run PiPER Controller (Robot Site)
 Follow the steps below to control the **AgileX-PiPER** robot via MQTT:
