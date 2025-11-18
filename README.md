@@ -8,7 +8,7 @@
 ## Quick Start
 - [Step 1: Run HTTPS Server](#step-1-run-https-server)
 - [Step 2: Build MQTT Broker](#step-2-build-mqtt-broker)
-- [Run PiPER Controller](#step-2-run-piper-controller-robot-site)
+- [Step 3: Test with WebXR](#step-3-test-with-webxr)
 - [Simulator](#run-in-simulator)
 - [VR Controller](#open-mqtt-controller-in-vr)
 - [Controller Operations](#controller-operations)
@@ -50,6 +50,7 @@ After starting, you will see two URLs:
 
 **Open the browser in your VR device and enter `https://192.168.197.39:3000` to access the web interface.**
 
+---
 ## Step 2: Build MQTT Broker
 
 ### 1. Install Mosquitto
@@ -93,8 +94,6 @@ allow_anonymous true
 ```
 Port numbers (e.g., 9001, 8333) can be customized.
 
----
-
 ### 3. Verify the MQTT Broker
 
 **Find your server address:**  
@@ -117,8 +116,6 @@ Use this IP together with your MQTT port. For example:
 > https://192.168.197.29:8333
 > ```
 
----
-
 ### 4. Start the MQTT Broker
 
 After verifying, you can use your local MQTT server for communication in your local network.
@@ -128,8 +125,6 @@ After verifying, you can use your local MQTT server for communication in your lo
 cd "C:\Program Files\mosquitto"
 mosquitto -v
 ```
-
----
 
 ### 5. Test Your MQTT Broker
 
@@ -146,6 +141,7 @@ python MQTT_Topic_list.py
 You can also use `MQTT_Topic_list.py` to confirm the UUID from your VR device with the topic `mgr/request`.
 
 ---
+## Step 3: Test with WebXR
 
 🌐 After the server is running, you can access the VR Viewer in your browser by appending /viewer to the server address. 
 
