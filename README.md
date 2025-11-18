@@ -78,7 +78,7 @@ This enables WebSocket connections on port 9001.
 
 First, generate `.pem` certificates.
 
-To generate self-certification files, in the folder `MQTT=certificate` run
+To generate self-certification files, in the folder `MQTT_Client` run
 ```bash
 node .\generate-ssl-cert.js 
 ```
