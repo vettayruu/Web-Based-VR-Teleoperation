@@ -5,9 +5,9 @@
   <p><em>Figure 1: System Overview.</em></p>
 </div>
 
-## 📑 Table of Contents
-- [Quick Start](#quick-start)
-- [Run MQTT Controller](#step-1-run-mqtt-controller-user-site)
+## Quick Start
+- [Step 1: Run HTTPS Server](#step1)
+- [Step 2: Build MQTT Broker](#step2)
 - [Run PiPER Controller](#step-2-run-piper-controller-robot-site)
 - [Simulator](#run-in-simulator)
 - [VR Controller](#open-mqtt-controller-in-vr)
@@ -17,19 +17,37 @@
 - [Demo Videos](#demo-videos)
 - [Python Packages](#python-packages)
 
-## Quick Start
+## Step 1: Run HTTPS Server
 
-### 🧩 Step 1: Run MQTT Controller (User Site)
+💡 **If this is your first time running the project, install the required Node.js modules:**
 ```bash
-cd ./src/app
+npm install
+```
+
+**If you do not have Node.js installed, download it from:**  
+```bash
+https://nodejs.org/en/download
+```
+
+**On Windows, you may need to allow script execution before running the server:**
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+**To start the Next.js HTTPS server, run:**
+```bash
 npm run dev-https
 ```
 
-💡 If this is your first time running the project, you need to install the required Node.js modules first:
-```bash
-cd ./src/app
-npm install
-```
+After starting, you will see two URLs like:
+- Local:   [https://localhost:3000](https://localhost:3000)
+- Network: [https://192.168.197.39:3000](https://192.168.197.39:3000)
+
+The Network IP address could be changed based on your Wi-Fi network.
+
+**In VR, only https can enter the VR mode, open the browser, and enter `https://192.168.197.39:3000` to access the web interface.**
+
+## Step 2: Build MQTT Broker
 
 🌐 After the server is running, you can access the VR Viewer in your browser by appending /viewer to the server address. 
 
