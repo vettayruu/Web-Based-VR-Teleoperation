@@ -148,6 +148,8 @@ python MQTT_Topic_list.py
 ---
 ## Step 3: Debug with WebXR and Simulator
 
+### 🥽 Install WebXR Plugin
+
 If you don't have a VR device, you can use WebXR tools for debugging.
 
 On Chrome, you can install the **Immersive Web Emulator** WebXR plugin:
@@ -163,11 +165,8 @@ You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobo
 
 1. **Download CoppeliaSim**
 
-   Visit the official website to download the latest version:
-
-   ```
-   https://www.coppeliarobotics.com/
-   ```
+   Visit the official website to download the latest version:  
+   [https://www.coppeliarobotics.com/](https://www.coppeliarobotics.com/)
 
 2. **Launch CoppeliaSim**
 
@@ -185,10 +184,19 @@ You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobo
 
    Click the "Play" button in CoppeliaSim to start the simulation.
 
-5. **Run the simulator control script**
+5. **Open VR teleoperation Web Interface in Chrome**
+
+   Visit:
+   ```
+   https://192.168.197.39:3000/
+   ```
+
+6. **Run the simulator control script**
    ```bash
    python MQTT_Robot_Simulator.py
    ```
+
+Then you can try to control the robot via WebXR.
 
 ## Step 4: Run Your Robot
 
