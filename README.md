@@ -1,7 +1,7 @@
 # Web-Based VR Teleoperation System
 
 <div align="center">
-  <img src="./system.svg" alt="System Architecture" width="800"/>
+  <img src="./Readme_imgs/system.svg" alt="System Architecture" width="800"/>
   <p><em>Figure 1: System Overview.</em></p>
 </div>
 
@@ -46,6 +46,11 @@ After starting, you will see two URLs:
 - Network: [https://192.168.197.39:3000](https://192.168.197.39:3000)
 
 > The Network IP address may vary depending on your network environment.
+
+<div align="center">
+  <img src="./Readme_imgs/npmrun.png" alt="Start Https Server." width="600"/>
+  <p><em>Figure 2: Start Https Server.</em></p>
+</div>
 
 ⚠️ **In VR, only HTTPS can enter VR/AR mode.**
 
