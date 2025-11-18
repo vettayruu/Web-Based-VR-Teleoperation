@@ -6,7 +6,7 @@
 </div>
 
 ## Quick Start
-- [Step 1 Run HTTPS Server](#step1)
+- [Step 1: Run HTTPS Server](#step-1-run-https-server)
 - [Step 2: Build MQTT Broker](#step2)
 - [Run PiPER Controller](#step-2-run-piper-controller-robot-site)
 - [Simulator](#run-in-simulator)
