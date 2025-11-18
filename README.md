@@ -1,8 +1,8 @@
 # Web-Based VR Teleoperation System
 
 <div align="center">
-  <img src="./system.svg" alt="System Architecture" width="1000"/>
-  <p><em>Figure 1: System Architecture of PiPER Control via MetaworkMQTT</em></p>
+  <img src="./system.svg" alt="System Architecture" width="800"/>
+  <p><em>Figure 1: System Overview.</em></p>
 </div>
 
 ## 📑 Table of Contents
