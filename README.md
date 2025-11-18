@@ -78,7 +78,7 @@ This enables WebSocket connections on port 9001.
 
 First, generate `.pem` certificates.
 
-To generate self-certification files, run
+To generate self-certification files, in the folder `MQTT=certificate` run
 ```bash
 node .\generate-ssl-cert.js 
 ```
@@ -110,11 +110,10 @@ Use this IP together with your MQTT port. For example:
 192.168.197.39:8333   (for wss)
 ```
 
-> ⚠️ **Important:**  
-> Verify the MQTT port before MQTT communication.  
+> ⚠️ **Important: Verify the MQTT port before MQTT communication.**  
 > To verify, open your browser and go to your MQTT port. For example:
 > ```
-> https://192.168.197.29:8333
+> https://192.168.197.39:8333
 > ```
 
 ### 4. Start the MQTT Broker
