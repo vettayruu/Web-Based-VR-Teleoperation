@@ -7,7 +7,7 @@
 
 ## Quick Start
 - [Step 1: Run HTTPS Server](#step-1-run-https-server)
-- [Step 2: Build MQTT Broker](#step2)
+- [Step 2: Build MQTT Broker](#step-2-build-mqtt-broker)
 - [Run PiPER Controller](#step-2-run-piper-controller-robot-site)
 - [Simulator](#run-in-simulator)
 - [VR Controller](#open-mqtt-controller-in-vr)
@@ -24,30 +24,128 @@
 npm install
 ```
 
-**If you do not have Node.js installed, download it from:**  
-```bash
-https://nodejs.org/en/download
-```
+**The project is designed to run in VS Code. Download it here:**  
+[https://code.visualstudio.com/](https://code.visualstudio.com/Download)
+
+**If you do not have Node.js installed, download it here:**  
+[https://nodejs.org/en/download](https://nodejs.org/en/download)
 
 **On Windows, you may need to allow script execution before running the server:**
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
-**To start the Next.js HTTPS server, run:**
+🚀 **To start the Next.js HTTPS server, run:**
 ```bash
 npm run dev-https
 ```
 
-After starting, you will see two URLs like:
+After starting, you will see two URLs:
 - Local:   [https://localhost:3000](https://localhost:3000)
 - Network: [https://192.168.197.39:3000](https://192.168.197.39:3000)
 
-The Network IP address could be changed based on your Wi-Fi network.
+> The Network IP address may vary depending on your network environment.
 
-**In VR, only https can enter the VR mode, open the browser, and enter `https://192.168.197.39:3000` to access the web interface.**
+⚠️ **In VR, only HTTPS can enter VR/AR mode.**
+
+**Open the browser in your VR device and enter `https://192.168.197.39:3000` to access the web interface.**
 
 ## Step 2: Build MQTT Broker
+
+### 1. Install Mosquitto
+
+Download Mosquitto from the official website: [https://mosquitto.org/download/](https://mosquitto.org/download/)
+
+On Windows, Mosquitto is usually installed in:
+```
+C:\Program Files\mosquitto
+```
+
+### 2. Configure Mosquitto
+
+Open `mosquitto.conf` in the installation folder and add the following settings:
+
+**WebSocket (non-secure, ws):**
+```
+listener 9001
+protocol websockets
+```
+This enables WebSocket connections on port 9001.
+
+**Secure WebSocket (wss):**
+
+First, generate `.pem` certificates.
+
+To generate self-certification files, run
+```bash
+node .\generate-ssl-cert.js 
+```
+
+Then you can get `cert.pem` and `key.pem` self-certification files.
+
+Copy `cert.pem` and `key.pem` to the installation folder, add the following lines to `mosquitto.conf`:
+```
+listener 8333
+protocol websockets
+certfile C:\Program Files\mosquitto\cert.pem
+keyfile C:\Program Files\mosquitto\key.pem
+allow_anonymous true
+```
+Port numbers (e.g., 9001, 8333) can be customized.
+
+---
+
+### 3. Verify the MQTT Broker
+
+**Find your server address:**  
+On Windows, run `ipconfig` in the terminal, and look for:
+
+```
+IPv4 Address. . . . . . . . . . . : 192.168.197.39
+```
+
+Use this IP together with your MQTT port. For example:
+```
+192.168.197.39:9001   (for ws)
+192.168.197.39:8333   (for wss)
+```
+
+> ⚠️ **Important:**  
+> Verify the MQTT port before MQTT communication.  
+> To verify, open your browser and go to your MQTT port. For example:
+> ```
+> https://192.168.197.29:8333
+> ```
+
+---
+
+### 4. Start the MQTT Broker
+
+After verifying, you can use your local MQTT server for communication in your local network.
+
+**Run Mosquitto as Administrator:**
+```
+cd "C:\Program Files\mosquitto"
+mosquitto -v
+```
+
+---
+
+### 5. Test Your MQTT Broker
+
+To test publishing a topic, run `local_mqtt_test.py` in the folder `Agilex-PiPER-MetaworkMQTT`:
+```
+python local_mqtt_test.py
+```
+
+To test subscribing to a topic, run `MQTT_Topic_list.py`:
+```
+python MQTT_Topic_list.py
+```
+
+You can also use `MQTT_Topic_list.py` to confirm the UUID from your VR device with the topic `mgr/request`.
+
+---
 
 🌐 After the server is running, you can access the VR Viewer in your browser by appending /viewer to the server address. 
 
