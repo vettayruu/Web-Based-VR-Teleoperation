@@ -17,7 +17,7 @@
 - [Demo Videos](#demo-videos)
 - [Python Packages](#python-packages)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 🧩 Step 1: Run MQTT Controller (User Site)
 ```bash
