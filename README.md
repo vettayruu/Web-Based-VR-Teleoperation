@@ -189,21 +189,33 @@ You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobo
 
    Click the "Play" button in CoppeliaSim to start the simulation.
 
-5. **Open VR teleoperation Web Interface in Chrome**
+5. **Open the VR Teleoperation Web Interface in Chrome**
 
    Visit:
    ```
    https://192.168.197.39:3000/
    ```
 
-   And Click `AR` button to enter the AR mode.
+   Click the `AR` button to enter AR mode.
 
-6. **Run the simulator control script**
+6. **Connect to the MQTT Broker**
+
+   The `MQTT Control ID` is displayed at the top of the web page.  
+   Copy this ID and use it in:
+   ```bash
+   python MQTT_Client.py
+   ```
+   Alternatively, you can check your control ID using:
+   ```bash
+   python MQTT_Topic_list.py
+   ```
+
+7. **Run the Simulator Control Script**
    ```bash
    python MQTT_Robot_Simulator.py
    ```
 
-Then you can try to control the robot via WebXR.
+Now you can control the robot via WebXR.
 
 ## Step 4: Run Your Robot
 
