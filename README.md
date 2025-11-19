@@ -42,7 +42,7 @@ After starting, you will see two URLs:
 - Local:   [https://localhost:3000](https://localhost:3000)
 - Network: https://192.168.197.**:****
 
-⚠️ The Network IP address may vary depending on your network environment.
+⚠️ **The Network IP address may vary** depending on your network environment.
 
 <div align="center">
   <img src="./Readme_imgs/npmrun.png" alt="Start Https Server." width="600"/>
