@@ -107,7 +107,7 @@ export default function RobotScene(props) {
       const videoEl = document.getElementById('leftVideo');
       if (videoEl && videoEl.srcObject !== props.webcamStream1) {
         videoEl.srcObject = props.webcamStream1;
-        // videoEl.play();
+        videoEl.play();
       }
     }
   }, [now]);
@@ -117,7 +117,7 @@ export default function RobotScene(props) {
       const videoEl = document.getElementById('rightVideo');
       if (videoEl && videoEl.srcObject !== props.webcamStream2) {
         videoEl.srcObject = props.webcamStream2;
-        // videoEl.play();
+        videoEl.play();
       }
     }
   }, [now]);
@@ -127,7 +127,7 @@ export default function RobotScene(props) {
       const videoEl = document.getElementById('subVideo');
       if (videoEl && videoEl.srcObject !== props.webcamStream3) {
         videoEl.srcObject = props.webcamStream3;
-        // videoEl.play();
+        videoEl.play();
       }
     }
   }, [now]);

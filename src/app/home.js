@@ -1557,14 +1557,16 @@ export default function DynamicHome(props) {
   React.useEffect(() => {
     if (!vrLeftStream && !vrRightStream) return;
 
-    const payload = {
-      timestamp: Date.now(),
-      joint: thetaBodyMQTT.current,
-      tool: thetaToolMQTT.current,
-      joint_left: thetaBodyLeftMQTT.current,
-      tool_left: thetaToolLeftMQTT.current,
-    };
-    setControlData(payload);
+    if (!shareControl && !showMenu) {
+      const payload = {
+        timestamp: Date.now(),
+        joint: thetaBodyMQTT.current,
+        tool: thetaToolMQTT.current,
+        joint_left: thetaBodyLeftMQTT.current,
+        tool_left: thetaToolLeftMQTT.current,
+      };
+      setControlData(payload);
+    }
 
     // const interval = setInterval(() => {
     //   const payload = {
