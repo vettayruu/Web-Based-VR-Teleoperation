@@ -40,7 +40,7 @@ npm run dev-https
 
 After starting, you will see two URLs:
 - Local:   [https://localhost:3000](https://localhost:3000)
-- Network: [https://192.168.197.**:****]
+- Network: https://192.168.197.**:****
 
 > The Network IP address may vary depending on your network environment.
 
