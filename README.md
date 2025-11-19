@@ -204,22 +204,26 @@ You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobo
 
 6. **Connect to the MQTT Broker**
 
-   The `MQTT Control ID` is displayed at the top of the web page.  
-   Copy this ID and use it in:
-   ```bash
-   python MQTT_Client.py
-   ```
-   Alternatively, you can check your control ID using:
+   The `MQTT Control ID` is displayed at the top of the web page. Each device has a unique ID.  
+   Copy this ID and replace `UserUUID` in `./Robot_Control/MQTT/MQTT_Client.py`.
+
+   In VR, copying the ID directly may be difficult. Alternatively, you can check your control ID using:
    ```bash
    python MQTT_Topic_list.py
    ```
+   Each topic published by the VR device will be shown here.
 
 7. **Run the Simulator Control Script**
    ```bash
-   python MQTT_Robot_Simulator.py
+   python MQTT_Simulation.py
    ```
 
 Now you can control the robot via WebXR.
+
+<div align="center">
+  <img src="./Readme_imgs/sim.png" alt="sim" width="1000"/>
+  <p><em>Figure 4: Simulation in Coppeliasim.</em></p>
+</div>
 
 ## Step 4: Run Your Robot
 
