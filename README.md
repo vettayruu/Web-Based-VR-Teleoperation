@@ -164,14 +164,18 @@ On Chrome, you can install the **Immersive Web Emulator** WebXR plugin:
 After installation, press **F12** to open Developer Tools.  
 You will find the **WebXR** tab in the developer tools bar, which allows you to emulate VR devices and test WebXR features directly in your browser.
 
+<div align="center">
+  <img src="./Readme_imgs/webxr.png" alt="webxr" width="1000"/>
+  <p><em>Figure 3: Chorme with WebXR.</em></p>
+</div>
+
 ### 🧪 Run in Simulator
 
 You can also simulate teleoperation using [CoppeliaSim](https://www.coppeliarobotics.com/).
 
 1. **Download CoppeliaSim**
 
-   Visit the official website to download the latest version:  
-   [https://www.coppeliarobotics.com/](https://www.coppeliarobotics.com/)
+   Visit the official website to download the latest version: [https://www.coppeliarobotics.com/](https://www.coppeliarobotics.com/)
 
 2. **Launch CoppeliaSim**
 
