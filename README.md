@@ -360,13 +360,19 @@ The inverse kinematics (IK) implementation in this project is based on the **Mod
 - 📘 Book: *Modern Robotics: Mechanics, Planning, and Control*  
 - 💻 Source Code: [NxRLab/ModernRobotics GitHub Repository](https://github.com/NxRLab/ModernRobotics)
 
-⚠️ In origine library, function `AxisAng3` has a bug, when input vector is a zero vector.
-Change the fucntion as
-```python
+⚠️ In the original library, the function `AxisAng3` has a bug when the input vector is a zero vector.
 
+**Please change the function to:**
+```python
+def AxisAng3(expc3):
+    norm = np.linalg.norm(expc3)
+    if NearZero(norm):
+        return (Normalize(expc3), 0)
+    else:
+        return (Normalize(expc3), np.linalg.norm(expc3))
 ```
 
-Or use modified library in `Robot_Control/Modern_Robotics/core.py`
+Or use the modified library in `Robot_Control/Modern_Robotics/core.py`.
 
 ## Python Packages
 
@@ -389,10 +395,16 @@ to check your conda environemnt list.
 pip install numpy
 ```
 
-📡 Communication
+📷 Visual (OpenCV, YOLO)
+```bash
+pip install opencv-python
+pip install ultralytics
+```
+
+📡 Communication (MQTT, WebRTC)
 ```bash
 pip install paho-mqtt
-pip install python-dotenv
+pip install sora-sdk
 ```
 
 🤖 Robotics
