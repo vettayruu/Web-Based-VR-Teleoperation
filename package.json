@@ -1,5 +1,5 @@
 {
-  "name": "PiPER-control",
+  "name": "PiPER-control-LIU",
   "version": "0.1.1",
   "private": true,
   "scripts": {
@@ -12,11 +12,12 @@
   "dependencies": {
     "aframe": "1.6",
     "bootstrap": "^5.3.3",
-    "mqtt": "^5.10.4",
+    "mqtt": "^5.14.1",
     "next": "15.2.4",
     "numeric": "^1.2.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "sora-js-sdk": "^2025.1.0",
     "three": "^0.177.0"
   }
 }
