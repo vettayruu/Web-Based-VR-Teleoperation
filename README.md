@@ -40,7 +40,7 @@ npm run dev-https
 
 After starting, you will see two URLs:
 - Local:   [https://localhost:3000](https://localhost:3000)
-- Network: [https://192.168.197.**:****]
+- Network: [https://192.168.***.**:****]
 
 > The Network IP address may vary depending on your network environment.
 
@@ -51,7 +51,7 @@ After starting, you will see two URLs:
 
 ⚠️ **In VR, only HTTPS can enter VR/AR mode.**
 
-**Open the browser in your VR device and enter `https://192.168.197.**:****` to access the web interface.**
+**Open the browser in your VR device and enter `https://192.168.***.**:****` to access the web interface.**
 
 ---
 ## Step 2: Build MQTT Broker
