@@ -297,7 +297,7 @@ After enter the VR mode, follow the steps below to control the **AgileX-PiPER** 
      python MQTT_teleoperation_cam.py
      ```
 
-   You can also try teleoperation using WebRTC's data channel:
+   (Option) If you have a SORA WebRTC SFU server, you can also try teleoperation using WebRTC's data channel:
 
    - **Right Arm via WebRTC:**
      ```bash
